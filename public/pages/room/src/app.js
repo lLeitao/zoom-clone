@@ -12,8 +12,10 @@ const onload = () => {
   const peerConfig = Object.values({
     id: undefined,
     config: {
-      port: 9000,
-      host: 'localhost',
+      host: 'https://sleepy-cliffs-91712.herokuapp.com/', //https://shielded-meadow-69366.herokuapp.com/
+      secure: true,
+      // port: 9000,
+      // host: 'localhost',
       path: '/'
     }
   });
