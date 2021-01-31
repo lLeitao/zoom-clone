@@ -5,4 +5,11 @@ class Media {
             audio
         });
     }
+
+    async getDisplayScreen(audio = true) {
+        return navigator.mediaDevices.getDisplayMedia({
+            video: true,
+            audio
+        })
+    }
 }

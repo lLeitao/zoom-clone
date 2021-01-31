@@ -6,17 +6,17 @@ const onload = () => {
   // const recorderBtn = document.getElementById('record')
   // recorderBtn.addEventListener('click', recordClick(recorderBtn))
 
-  // const socketUrl = 'http://localhost:3000';
-  const socketUrl = 'https://boiling-temple-07403.herokuapp.com/';
+  const socketUrl = 'http://localhost:3000';
+  // const socketUrl = 'https://boiling-temple-07403.herokuapp.com/';
   const socketBuilder = new SocketBuilder({ socketUrl });
 
   const peerConfig = Object.values({
     id: undefined,
     config: {
-      host: 'shielded-meadow-69366.herokuapp.com',
-      secure: true,
-      // port: 9000,
-      // host: 'localhost',
+      // host: 'shielded-meadow-69366.herokuapp.com',
+      // secure: true,
+      port: 9000,
+      host: 'localhost',
       path: '/'
     }
   });

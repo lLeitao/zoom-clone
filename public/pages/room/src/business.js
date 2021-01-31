@@ -7,6 +7,7 @@ class Business {
         this.socketBuilder = socketBuilder;
         this.peerBuilder = peerBuilder;
 
+        this.sharedScreen;
         this.currentStream = {};
         this.currentPeer = {};
         this.socket = {};
@@ -25,6 +26,7 @@ class Business {
         // Record button
         this.view.configureRecordButton(this.onRecordPressed.bind(this));
         this.view.configureLeaveButton(this.onLeavePressed.bind(this));
+        this.view.configureShareButton(this.onSharePressed.bind(this));
 
         // Capturar camera
         this.currentStream = await this.media.getCamera();
@@ -33,6 +35,7 @@ class Business {
         this.socket = this.socketBuilder
             .setOnUserConnected( this.onUserConnected() )
             .setOnUserDisconnected(this.onUserDisconnected())
+            .setOnScreenConnected(this.onScreenConnected())
             .build();
         
         this.currentPeer = await this.peerBuilder
@@ -49,12 +52,16 @@ class Business {
         // console.log('init', this.currentStream);
     }
 
-    addVideoStream(userId, stream = this.currentStream) {
+    addVideoStream(userId, stream = this.currentStream, isDisplayScreen = false) {
         const recorderInstance = new Recorder(userId, stream);
         this.usersRecordings.set(recorderInstance.filename, recorderInstance);
         
         if(this.recordingEnabled) {
             recorderInstance.startRecording();
+        }
+
+        if(isDisplayScreen) {
+            console.log("SCREEEN DISPLAY ON")
         }
         
         const isCurrentId = userId === this.currentPeer.id;
@@ -62,7 +69,8 @@ class Business {
             userId,
             stream,
             isCurrentId,
-            muted: true
+            muted: true,
+            isDisplayScreen
         })
     }
 
@@ -184,5 +192,66 @@ class Business {
 
     onLeavePressed() {
         this.usersRecordings.forEach( (value, key) => value.download() );
+    }
+
+    async onSharePressed(enabled) {
+        this.sharingEnabled = enabled;
+        console.log('press', enabled)
+
+        if( !this.sharedScreen ) {
+            this.sharedScreen = await this.media.getDisplayScreen();
+
+            const context = this;
+            this.sharedScreen.getVideoTracks()[0].onended = function (mainContext = context) {
+                console.log("roi");
+                mainContext.sharedScreen = undefined;
+                // emitir um evento para todos que a transmissão encerrou
+            };
+
+            this.socket.emit('screen-shared', this.room, this.currentPeer.id);
+            this.addVideoStream(this.currentPeer.id, this.sharedScreen, true);
+
+        } else if(!enabled) {
+            // Desligar transmissão
+            this.sharedScreen.getVideoTracks()[0].stop();
+            this.sharedScreen = undefined;
+        }
+
+        
+
+        // for( const [key, value] of this.userSharing ) {
+        //     if(this.enabled) {
+        //         value.startRecording();
+        //         continue;
+        //     }
+
+        //     this.stopRecording(key);
+        // }
+
+    }
+
+    onScreenSharingIsOver() {
+
+    }
+
+    onScreenSharing() {
+
+        return (call, stream ) => {
+            const callerId = call.peer;
+
+            if( this.peers.has(callerId) ) return;
+
+            this.addVideoStream(callerId, stream);
+            this.peers.set(callerId, { call });
+            this.view.hiddenParticipantsVideo(this.peers, callerId);
+        }
+        
+    }
+
+    onScreenConnected() {
+        return screenId => {
+            console.log('screen connected!', screenId);
+            // this.currentPeer.call(userId, this.currentStream);
+        }
     }
 }

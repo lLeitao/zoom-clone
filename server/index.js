@@ -27,7 +27,21 @@ io.on('connection', socket => {
             console.log('logout');
             socket.to(roomId).broadcast.emit('user-disconnected', userId);
         });
-    })
+    });
+
+    socket.on('screen-shared', (roomId, userId) => {
+
+        console.log("screeeen", roomId, userId)
+
+        const screenId = `screen:${userId}`;
+
+        socket.join(roomId);
+        socket.to(roomId).broadcast.emit('screen-connected', screenId);
+
+        socket.on('screen-disconnect', () => {
+            socket.to(roomId).broadcast.emit('screen-disconnected', screenId);
+        });
+    });
 });
 
 const startServer = () => {
